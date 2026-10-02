@@ -6,6 +6,7 @@
     <AssemblyName>Bitshifter</AssemblyName>
     <RootNamespace>Bitshifter</RootNamespace>
     <Version>1.0.0</Version>
+    <ReferenceUnityUI>true</ReferenceUnityUI>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)..\..\common\oni-mod.targets" />
