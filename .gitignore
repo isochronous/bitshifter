@@ -1,0 +1,7 @@
+bin/
+obj/
+.vs/
+*.user
+publish/content/
+publish/*.zip
+publish/workshop-description.live.txt

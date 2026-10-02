@@ -1,0 +1,3 @@
+title: "Bitshifter"
+description: "Lets the Automation Ribbon Reader and Ribbon Writer select any of bits 1-31 instead of 1-4, so one ribbon can carry up to 31 signals. Nothing else changes. Steps aside automatically when another mod already widens the reader or writer."
+staticID: "Isochronous.Bitshifter"

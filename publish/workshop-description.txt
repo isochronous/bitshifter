@@ -1,0 +1,21 @@
+Lets the Automation Ribbon Reader and Ribbon Writer select any of bits 1-31 instead of 1-4, so one ribbon can carry up to 31 independent signals. Nothing else changes.
+
+[h2]Why this works[/h2]
+A ribbon's signal is a 32-bit number; the game only exposes the low four bits. The Reader and Writer already work by shifting the whole value by the selected bit, with no upper limit, so offering more bits in their side screen is all it takes. Bit 32 is the sign bit and can never read as on, so it is left out.
+
+[h2]What you get[/h2]
+[list]
+[*]The bit selector of both buildings lists Bit 1 to Bit 31.
+[*]A Reader on a high bit outputs that bit on a wire, or the value shifted down by that many bits on a ribbon, exactly as for bits 1-4. A Writer shifts its input up by the selected bit.
+[*]The building art only has a highlight for bits 1-4; with a higher bit selected the building shows its plain idle pose (lights still correct) and the selection is shown in the side screen.
+[*]Copy-settings works; the selected bit is saved with the building.
+[/list]
+
+[h2]Compatibility[/h2]
+Works with the base game and all DLCs, on build 744825 (U59) or newer. No dependencies. Safe to add to or remove from an existing save.
+
+The mod stands down automatically (and says so in the log) when Automation Expanded, Automation Plus, or Edge Detectors and Diode is enabled, or when any other mod has already patched the Reader's or Writer's bit depth, so it never doubles up with a mod that does the same thing.
+
+Developed by a professional software developer with assistance from Claude Code.
+
+Source and issue tracker: https://github.com/isochronous/bitshifter
