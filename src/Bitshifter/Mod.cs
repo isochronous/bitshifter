@@ -12,20 +12,27 @@ namespace Bitshifter
 		public const int Bits = 31;
 
 		/// <summary>
-		/// Workshop items that may already widen the ribbon reader and writer. When one of them is
+		/// Workshop items that already widen the ribbon reader and writer. When one of them is
 		/// enabled this mod does nothing, so the two never fight over the same methods.
 		/// </summary>
 		private static readonly string[] YieldToWorkshopIds =
 		{
-			"2014558219", // Automation Expanded
-			"2661900022", // Automation Plus
-			"2777145427", // Edge Detectors and Diode (Automation)
+			"3244925649", // Digital CPU (ONICPU): 32-bit ribbons, reader and writer
 		};
 
+		private static readonly string[] YieldToStaticIds =
+		{
+			"OniSmallCpu", // Digital CPU, however it was installed
+		};
+
+		// Methods a mod would patch to widen the reader or writer. Digital CPU, for one, sets
+		// the bitDepth field from an OnSpawn postfix rather than touching GetBitDepth.
 		private static readonly MethodBase[] Contested =
 		{
 			AccessTools.Method(typeof(LogicRibbonReader), nameof(LogicRibbonReader.GetBitDepth)),
 			AccessTools.Method(typeof(LogicRibbonWriter), nameof(LogicRibbonWriter.GetBitDepth)),
+			AccessTools.Method(typeof(LogicRibbonReader), "OnSpawn"),
+			AccessTools.Method(typeof(LogicRibbonWriter), "OnSpawn"),
 		};
 
 		// Patches are applied in OnAllModsLoaded, after every other mod had its turn, so
@@ -57,6 +64,11 @@ namespace Bitshifter
 				{
 					if (mod.label.id == id)
 						return "'" + mod.title + "' (Workshop " + id + ") is enabled";
+				}
+				foreach (string id in YieldToStaticIds)
+				{
+					if (mod.staticID == id)
+						return "'" + mod.title + "' (" + id + ") is enabled";
 				}
 			}
 			foreach (MethodBase method in Contested)

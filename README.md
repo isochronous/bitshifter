@@ -17,8 +17,8 @@ A ribbon's signal is a 32-bit integer; the game only exposes the low four bits. 
 
 The mod stands down (and says so in the log) when something else already handles this:
 
-- when any of these is enabled: [Automation Expanded](https://steamcommunity.com/sharedfiles/filedetails/?id=2014558219), [Automation Plus](https://steamcommunity.com/sharedfiles/filedetails/?id=2661900022), or [Edge Detectors and Diode](https://steamcommunity.com/sharedfiles/filedetails/?id=2777145427);
-- when any other mod has already Harmony-patched `LogicRibbonReader.GetBitDepth` or `LogicRibbonWriter.GetBitDepth` by the time all mods are loaded.
+- when [Digital CPU](https://steamcommunity.com/sharedfiles/filedetails/?id=3244925649) (ONICPU) is enabled, since it already expands the ribbons, Reader, and Writer to 32 bits;
+- when any other mod has already Harmony-patched `GetBitDepth` or `OnSpawn` on `LogicRibbonReader` or `LogicRibbonWriter` by the time all mods are loaded (Digital CPU, for instance, sets the bit depth from an `OnSpawn` postfix).
 
 So whichever mod widens the reader and writer, this one yields to it rather than doubling up.
 
