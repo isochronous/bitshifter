@@ -80,7 +80,18 @@ namespace Bitshifter
 		{
 			// Height of the row list as laid out for the vanilla depth, before more rows exist.
 			RectTransform rows = __instance.rowPrefab != null ? __instance.rowPrefab.transform.parent as RectTransform : null;
-			__state = rows != null && rows.GetComponentInParent<ScrollRect>() == null ? rows.rect.height : 0f;
+			__state = rows != null && !IsWrapped(rows) ? rows.rect.height : 0f;
+		}
+
+		/// <summary>
+		/// True once the row list sits in the scroll view. The details screen calls SetTarget
+		/// before it re-shows a hidden side screen, so this must not rely on
+		/// GetComponentInParent, which skips inactive objects and would wrap the list again
+		/// (a scroll view inside a scroll view) every time the screen is reopened.
+		/// </summary>
+		private static bool IsWrapped(RectTransform rows)
+		{
+			return rows.parent != null && rows.parent.GetComponent<KScrollRect>() != null;
 		}
 
 		private static void Postfix(LogicBitSelectorSideScreen __instance, float __state)
@@ -88,7 +99,7 @@ namespace Bitshifter
 			if (__instance.rowPrefab == null)
 				return;
 			RectTransform rows = __instance.rowPrefab.transform.parent as RectTransform;
-			if (rows == null || rows.parent == null || rows.GetComponentInParent<ScrollRect>() != null)
+			if (rows == null || rows.parent == null || IsWrapped(rows))
 				return;
 
 			float height = __state;
