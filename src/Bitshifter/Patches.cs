@@ -146,6 +146,33 @@ namespace Bitshifter
 			scrollRect.verticalScrollbar = bar;
 			scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
 			LayoutRebuilder.MarkLayoutForRebuild(viewport);
+			FitUnderHeader(__instance);
+		}
+
+		/// <summary>
+		/// The screen's "Contents" object declares a minimum width of 316 while the details
+		/// panel's Options header is 280 wide. The panel root takes its children's minimum
+		/// width, so the body grows past the header and a blank strip shows at the top left.
+		/// Clamp the minimum to the header's width; the rows need 266.
+		/// </summary>
+		private static void FitUnderHeader(LogicBitSelectorSideScreen screen)
+		{
+			float width = HeaderWidth();
+			foreach (LayoutElement element in screen.GetComponentsInChildren<LayoutElement>(true))
+			{
+				if (element.minWidth > width)
+					element.minWidth = width;
+				if (element.preferredWidth > width)
+					element.preferredWidth = width;
+			}
+		}
+
+		private static float HeaderWidth()
+		{
+			DetailsScreen details = DetailsScreen.Instance;
+			GameObject header = details != null ? AccessTools.Field(typeof(DetailsScreen), "sidescreenTabHeader")?.GetValue(details) as GameObject : null;
+			RectTransform rect = header != null ? header.GetComponent<RectTransform>() : null;
+			return rect != null && rect.rect.width > 0f ? rect.rect.width : 280f;
 		}
 
 		/// <summary>
