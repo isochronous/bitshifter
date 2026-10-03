@@ -72,7 +72,7 @@ namespace Bitshifter
 		private const int VisibleRows = 4;
 		private const float HeightScale = 1.5f;
 		private const float BarWidth = 12f;
-		private const float BarGap = 4f;
+		private const float BarGap = 2f;
 		private static readonly Color TrackColor = new Color(0.10f, 0.10f, 0.12f, 0.85f);
 		private static readonly Color HandleColor = new Color(0.62f, 0.64f, 0.68f, 1f);
 
@@ -153,7 +153,7 @@ namespace Bitshifter
 		/// The screen's "Contents" object declares a minimum width of 316 while the details
 		/// panel's Options header is 280 wide. The panel root takes its children's minimum
 		/// width, so the body grows past the header and a blank strip shows at the top left.
-		/// Clamp the minimum to the header's width; the rows need 266.
+		/// Clamp the minimum to the header's width; the rows need 250.
 		/// </summary>
 		private static void FitUnderHeader(LogicBitSelectorSideScreen screen)
 		{
@@ -164,6 +164,13 @@ namespace Bitshifter
 					element.minWidth = width;
 				if (element.preferredWidth > width)
 					element.preferredWidth = width;
+			}
+			// The screen's layout groups only expand their children, which keep the widths they
+			// were built with for the wider panel; make them size the children to the panel.
+			foreach (VerticalLayoutGroup group in screen.GetComponentsInChildren<VerticalLayoutGroup>(true))
+			{
+				group.childControlWidth = true;
+				group.childForceExpandWidth = true;
 			}
 		}
 
