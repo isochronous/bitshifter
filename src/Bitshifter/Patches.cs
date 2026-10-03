@@ -60,13 +60,19 @@ namespace Bitshifter
 
 	// The bit selector side screen is a fixed-height panel whose rows sit in a vertical
 	// layout; four rows fit, thirty-one do not. On first use the rows' container is moved
-	// into a scroll view that keeps the height the four rows had, so the panel's layout is
-	// untouched and the list scrolls with the mouse wheel.
+	// into a scroll view one and a half times the height the four rows had (tall enough to
+	// make it obvious there is more below), with a permanent scrollbar on the right; the
+	// list scrolls with the wheel or the bar.
 	[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.SetTarget))]
 	internal static class LogicBitSelectorSideScreen_SetTarget_Patch
 	{
 		private const string ScrollName = "BitshifterScroll";
 		private const int VisibleRows = 4;
+		private const float HeightScale = 1.5f;
+		private const float BarWidth = 12f;
+		private const float BarGap = 4f;
+		private static readonly Color TrackColor = new Color(0.10f, 0.10f, 0.12f, 0.85f);
+		private static readonly Color HandleColor = new Color(0.62f, 0.64f, 0.68f, 1f);
 
 		private static void Prefix(LogicBitSelectorSideScreen __instance, out float __state)
 		{
@@ -98,6 +104,7 @@ namespace Bitshifter
 			RectTransform viewport = scroll.GetComponent<RectTransform>();
 			viewport.SetParent(rows.parent, false);
 			viewport.SetSiblingIndex(rows.GetSiblingIndex());
+			height *= HeightScale;
 			LayoutElement size = scroll.GetComponent<LayoutElement>();
 			size.preferredHeight = height;
 			size.minHeight = height;
@@ -110,6 +117,7 @@ namespace Bitshifter
 			rows.pivot = new Vector2(0.5f, 1f);
 			rows.anchoredPosition = Vector2.zero;
 			rows.sizeDelta = new Vector2(0f, rows.sizeDelta.y);
+			rows.offsetMax = new Vector2(-(BarWidth + BarGap), rows.offsetMax.y); // leave room for the bar
 			ContentSizeFitter fitter = rows.gameObject.AddOrGet<ContentSizeFitter>();
 			fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -121,7 +129,39 @@ namespace Bitshifter
 			scrollRect.movementType = ScrollRect.MovementType.Clamped;
 			scrollRect.inertia = false;
 			scrollRect.scrollSensitivity = 24f;
+			scrollRect.verticalScrollbar = MakeScrollbar(viewport);
+			scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
 			LayoutRebuilder.MarkLayoutForRebuild(viewport);
+		}
+
+		/// <summary>A plain track-and-handle scrollbar (flat colours, no sprites) down the viewport's right edge.</summary>
+		private static Scrollbar MakeScrollbar(RectTransform viewport)
+		{
+			GameObject barObject = new GameObject("Scrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+			RectTransform bar = barObject.GetComponent<RectTransform>();
+			bar.SetParent(viewport, false);
+			bar.anchorMin = new Vector2(1f, 0f);
+			bar.anchorMax = new Vector2(1f, 1f);
+			bar.pivot = new Vector2(1f, 0.5f);
+			bar.anchoredPosition = Vector2.zero;
+			bar.sizeDelta = new Vector2(BarWidth, 0f);
+			barObject.GetComponent<Image>().color = TrackColor;
+
+			GameObject handleObject = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+			RectTransform handle = handleObject.GetComponent<RectTransform>();
+			handle.SetParent(bar, false);
+			handle.anchorMin = Vector2.zero;
+			handle.anchorMax = Vector2.one;
+			handle.offsetMin = new Vector2(2f, 2f);
+			handle.offsetMax = new Vector2(-2f, -2f);
+			Image handleImage = handleObject.GetComponent<Image>();
+			handleImage.color = HandleColor;
+
+			Scrollbar scrollbar = barObject.GetComponent<Scrollbar>();
+			scrollbar.handleRect = handle;
+			scrollbar.targetGraphic = handleImage;
+			scrollbar.direction = Scrollbar.Direction.BottomToTop;
+			return scrollbar;
 		}
 	}
 }

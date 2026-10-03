@@ -8,7 +8,7 @@ A ribbon's signal is a 32-bit integer; the game only exposes the low four bits. 
 
 ## What it does
 
-- The bit selector side screen of both buildings lists Bit 1 … Bit 31. The panel is a fixed height, so the list sits in a scroll view that keeps the height the four vanilla rows had; scroll it with the mouse wheel.
+- The bit selector side screen of both buildings lists Bit 1 … Bit 31. The panel is a fixed height, so the list sits in a scroll view one and a half times the height the four vanilla rows had, with a scrollbar; scroll it with the wheel or the bar.
 - A Reader set to a high bit outputs that bit on a 1-bit wire, or the value shifted down by that many bits on a ribbon, exactly as it does for bits 1–4. A Writer shifts its input up by the selected bit.
 - The buildings' animations only have a "selected bit" highlight for bits 1–4; with a higher bit selected the building shows its plain idle pose, with the bit and port lights still lit correctly. The selection is shown in the side screen.
 - Copy-settings works as before; the selected bit is saved with the building. If the mod is removed, a building set to a bit above 4 keeps working, but the vanilla side screen will not show its selection until you pick a bit again.
@@ -45,4 +45,4 @@ A successful build deploys the mod to `Documents\Klei\OxygenNotIncluded\mods\loc
 
 ## Implementation notes
 
-Five Harmony patches, applied in `OnAllModsLoaded` (after every other mod has loaded, so the compatibility check sees their patches): `GetBitDepth` on `LogicRibbonReader` and `LogicRibbonWriter` returns 31; `UpdateVisuals` on both plays `idle` when the selected bit is above 4; and `LogicBitSelectorSideScreen.SetTarget` moves the rows' container into a plain Unity `ScrollRect` (with `RectMask2D` and a `ContentSizeFitter`) the first time the screen is shown, sized to the row list's original height so the panel's own layout is unchanged. No PLib, no options, no strings.
+Five Harmony patches, applied in `OnAllModsLoaded` (after every other mod has loaded, so the compatibility check sees their patches): `GetBitDepth` on `LogicRibbonReader` and `LogicRibbonWriter` returns 31; `UpdateVisuals` on both plays `idle` when the selected bit is above 4; and `LogicBitSelectorSideScreen.SetTarget` moves the rows' container into a plain Unity `ScrollRect` (with `RectMask2D`, a `ContentSizeFitter`, and a flat-colour `Scrollbar`) the first time the screen is shown, 1.5x the row list's original height. No PLib, no options, no strings.

@@ -5,7 +5,7 @@ A ribbon's signal is a 32-bit number; the game only exposes the low four bits. T
 
 [h2]What you get[/h2]
 [list]
-[*]The bit selector of both buildings lists Bit 1 to Bit 31, in a list that scrolls with the mouse wheel.
+[*]The bit selector of both buildings lists Bit 1 to Bit 31, in a scrolling list with a scrollbar.
 [*]A Reader on a high bit outputs that bit on a wire, or the value shifted down by that many bits on a ribbon, exactly as for bits 1-4. A Writer shifts its input up by the selected bit.
 [*]The building art only has a highlight for bits 1-4; with a higher bit selected the building shows its plain idle pose (lights still correct) and the selection is shown in the side screen.
 [*]Copy-settings works; the selected bit is saved with the building.
