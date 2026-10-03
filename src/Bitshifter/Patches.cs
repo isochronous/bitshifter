@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -61,8 +62,9 @@ namespace Bitshifter
 	// The bit selector side screen is a fixed-height panel whose rows sit in a vertical
 	// layout; four rows fit, thirty-one do not. On first use the rows' container is moved
 	// into a scroll view one and a half times the height the four rows had (tall enough to
-	// make it obvious there is more below), with a permanent scrollbar on the right; the
-	// list scrolls with the wheel or the bar.
+	// make it obvious there is more below), with a permanent scrollbar on the right. The
+	// scroll view is the game's own KScrollRect and the bar is cloned from a vanilla side
+	// screen, so both look and feel like the rest of the details panel.
 	[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.SetTarget))]
 	internal static class LogicBitSelectorSideScreen_SetTarget_Patch
 	{
@@ -100,7 +102,7 @@ namespace Bitshifter
 				height = rowHeight * VisibleRows + spacing * (VisibleRows - 1) + padding;
 			}
 
-			GameObject scroll = new GameObject(ScrollName, typeof(RectTransform), typeof(RectMask2D), typeof(ScrollRect), typeof(LayoutElement));
+			GameObject scroll = new GameObject(ScrollName, typeof(RectTransform), typeof(RectMask2D), typeof(KScrollRect), typeof(LayoutElement));
 			RectTransform viewport = scroll.GetComponent<RectTransform>();
 			viewport.SetParent(rows.parent, false);
 			viewport.SetSiblingIndex(rows.GetSiblingIndex());
@@ -117,24 +119,85 @@ namespace Bitshifter
 			rows.pivot = new Vector2(0.5f, 1f);
 			rows.anchoredPosition = Vector2.zero;
 			rows.sizeDelta = new Vector2(0f, rows.sizeDelta.y);
-			rows.offsetMax = new Vector2(-(BarWidth + BarGap), rows.offsetMax.y); // leave room for the bar
 			ContentSizeFitter fitter = rows.gameObject.AddOrGet<ContentSizeFitter>();
 			fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-			ScrollRect scrollRect = scroll.GetComponent<ScrollRect>();
+			KScrollRect scrollRect = scroll.GetComponent<KScrollRect>();
 			scrollRect.content = rows;
 			scrollRect.viewport = viewport;
 			scrollRect.horizontal = false;
 			scrollRect.vertical = true;
 			scrollRect.movementType = ScrollRect.MovementType.Clamped;
-			scrollRect.inertia = false;
-			scrollRect.scrollSensitivity = 24f;
-			scrollRect.verticalScrollbar = MakeScrollbar(viewport);
+			scrollRect.allowVerticalScrollWheel = true;
+			Scrollbar bar = CloneVanillaScrollbar(viewport) ?? MakeScrollbar(viewport);
+			float barWidth = bar.GetComponent<RectTransform>().sizeDelta.x;
+			rows.offsetMax = new Vector2(-(barWidth + BarGap), rows.offsetMax.y);
+			scrollRect.verticalScrollbar = bar;
 			scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
 			LayoutRebuilder.MarkLayoutForRebuild(viewport);
 		}
 
-		/// <summary>A plain track-and-handle scrollbar (flat colours, no sprites) down the viewport's right edge.</summary>
+		/// <summary>
+		/// A copy of the vertical scrollbar of the first vanilla side screen that has one (the
+		/// receptacle side screen, usually), pinned to the viewport's right edge at its own
+		/// width. Null when none can be found.
+		/// </summary>
+		private static Scrollbar CloneVanillaScrollbar(RectTransform viewport)
+		{
+			Scrollbar template = FindVanillaScrollbar();
+			if (template == null)
+			{
+				Debug.LogWarning("[Bitshifter] No vanilla scrollbar to copy; using a plain one");
+				return null;
+			}
+			GameObject barObject = Object.Instantiate(template.gameObject, viewport, false);
+			barObject.name = "Scrollbar";
+			barObject.SetActive(true);
+			RectTransform bar = barObject.GetComponent<RectTransform>();
+			float width = template.GetComponent<RectTransform>().rect.width;
+			if (width <= 0f)
+				width = BarWidth;
+			bar.anchorMin = new Vector2(1f, 0f);
+			bar.anchorMax = new Vector2(1f, 1f);
+			bar.pivot = new Vector2(1f, 0.5f);
+			bar.anchoredPosition = Vector2.zero;
+			bar.sizeDelta = new Vector2(width, 0f);
+			Scrollbar scrollbar = barObject.GetComponent<Scrollbar>();
+			scrollbar.onValueChanged.RemoveAllListeners();
+			scrollbar.direction = Scrollbar.Direction.BottomToTop;
+			return scrollbar;
+		}
+
+		private static Scrollbar FindVanillaScrollbar()
+		{
+			DetailsScreen details = DetailsScreen.Instance;
+			if (details != null)
+			{
+				var refs = AccessTools.Field(typeof(DetailsScreen), "sideScreens")?.GetValue(details) as List<DetailsScreen.SideScreenRef>;
+				if (refs != null)
+				{
+					foreach (DetailsScreen.SideScreenRef screen in refs)
+					{
+						if (screen.screenPrefab == null)
+							continue;
+						foreach (ScrollRect rect in screen.screenPrefab.GetComponentsInChildren<ScrollRect>(true))
+						{
+							if (rect.vertical && rect.verticalScrollbar != null)
+								return rect.verticalScrollbar;
+						}
+					}
+				}
+			}
+			foreach (Scrollbar candidate in Resources.FindObjectsOfTypeAll<Scrollbar>())
+			{
+				if (candidate.direction == Scrollbar.Direction.BottomToTop && candidate.handleRect != null
+					&& candidate.handleRect.GetComponent<Image>()?.sprite != null)
+					return candidate;
+			}
+			return null;
+		}
+
+		/// <summary>Fallback: a plain track-and-handle scrollbar (flat colours, no sprites) down the viewport's right edge.</summary>
 		private static Scrollbar MakeScrollbar(RectTransform viewport)
 		{
 			GameObject barObject = new GameObject("Scrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
