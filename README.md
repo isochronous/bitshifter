@@ -1,5 +1,7 @@
 # Bitshifter
 
+**This repository is archived.** This project now lives in [isochronous/ONI-Mods](https://github.com/isochronous/ONI-Mods/tree/main/mods/bitshifter), with its full history; work and new releases continue there. The releases published here stay available.
+
 An [Oxygen Not Included](https://www.klei.com/games/oxygen-not-included) mod that lets the **Automation Ribbon Reader** and **Ribbon Writer** select any of bits 1–31 instead of 1–4. Nothing else changes.
 
 ## Why
